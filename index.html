@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社会福祉士 過去問演習 ｜ kenjispark AI士業ラボ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: linear-gradient(170deg, #0a0e1a 0%, #101828 50%, #0d1520 100%);
+    min-height: 100vh;
+    color: #e0e6ef;
+  }
+  #root { max-width: 720px; margin: 0 auto; padding: 16px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Header */
+  .header { margin-bottom: 20px; padding: 20px 16px 16px; background: linear-gradient(135deg, rgba(0,200,220,0.08), rgba(0,100,180,0.05)); border-radius: 14px; border: 1px solid rgba(0,220,230,0.15); }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .badge { background: linear-gradient(135deg, #00c8dc, #0090b8); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px; }
+  .header-title { font-size: 20px; font-weight: 900; color: #00e0e0; letter-spacing: 2px; }
+  .score-text { font-size: 13px; color: #7fdbda; min-height: 18px; display: block; margin-bottom: 6px; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #00c8dc, #00e0e0); border-radius: 3px; transition: width 0.4s ease; }
+  .progress-label { font-size: 12px; color: #8899aa; margin-top: 4px; text-align: right; }
+
+  /* Card */
+  .card { background: rgba(14,22,38,0.85); border: 1px dashed rgba(0,220,230,0.3); border-radius: 12px; padding: 20px 16px; margin-bottom: 16px; }
+  .card-header { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .exam-label { font-size: 13px; color: #00e0e0; font-weight: 700; }
+  .category-label { font-size: 13px; color: #ff6b6b; font-weight: 700; }
+  .dashed-line { border-top: 1px dashed rgba(0,220,230,0.25); margin: 12px 0; }
+  .question-number { font-size: 16px; font-weight: 900; color: #00e0e0; margin-bottom: 10px; }
+  .question-text { font-size: 15px; line-height: 1.75; margin-bottom: 20px; color: #d0d8e8; }
+
+  /* Choices */
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice {
+    display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; cursor: pointer; text-align: left; color: #c8d0dc;
+    font-size: 14px; line-height: 1.6; transition: all 0.2s ease;
+    font-family: 'Noto Sans JP', sans-serif; position: relative; width: 100%;
+  }
+  .choice:hover { background: rgba(255,255,255,0.06); }
+  .choice.selected { background: rgba(0,200,220,0.1); border-color: rgba(0,220,230,0.5); color: #fff; }
+  .choice.correct { background: rgba(0,200,100,0.12); border-color: rgba(0,220,100,0.5); color: #80ffb0; }
+  .choice.wrong { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.4); color: #ff9090; }
+  .choice.disabled { cursor: default; }
+  .choice-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 24px; border-radius: 12px;
+    background: rgba(0,220,230,0.12); color: #00e0e0;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+  .choice-text { flex: 1; }
+  .mark { font-weight: 900; font-size: 18px; margin-left: auto; flex-shrink: 0; }
+  .mark-correct { color: #00e080; }
+  .mark-wrong { color: #ff6060; }
+
+  /* Submit */
+  .submit-btn {
+    display: block; width: 100%; margin-top: 20px; padding: 14px 0;
+    background: linear-gradient(135deg, #00b8c8, #0080b0); color: #fff;
+    font-size: 16px; font-weight: 700; border: none; border-radius: 10px;
+    cursor: pointer; letter-spacing: 2px; font-family: 'Noto Sans JP', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Result Banner */
+  .result-banner {
+    display: flex; align-items: center; gap: 14px; margin-top: 20px;
+    padding: 16px; border-radius: 10px; animation: fadeIn 0.3s ease;
+  }
+  .result-banner.correct-bg { background: rgba(0,200,100,0.1); border: 1px solid rgba(0,200,100,0.3); }
+  .result-banner.wrong-bg { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.25); }
+  .result-icon { font-size: 28px; }
+  .result-title { font-size: 18px; font-weight: 900; margin-bottom: 2px; }
+  .result-answer { font-size: 14px; color: #8899aa; }
+
+  /* Explanation */
+  .explanation-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; background: none; border: none; cursor: pointer;
+    padding: 0; font-family: 'Noto Sans JP', sans-serif;
+  }
+  .explanation-title { font-size: 16px; font-weight: 900; color: #00e0e0; }
+  .toggle-arrow { font-size: 14px; color: #00e0e0; }
+  .explanation-body { animation: fadeIn 0.4s ease; }
+  .explanation-summary { font-size: 14px; line-height: 1.8; color: #c0c8d8; margin-bottom: 16px; }
+  .detail-item { display: flex; gap: 8px; font-size: 13px; line-height: 1.7; color: #a0aab8; margin-bottom: 10px; }
+  .detail-bullet { color: #00c0c0; flex-shrink: 0; margin-top: 2px; font-size: 8px; }
+
+  /* Navigation */
+  .nav-area { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .nav-btn {
+    padding: 10px 16px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: #8899aa; font-size: 13px; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s;
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.next { background: rgba(0,200,220,0.08); border-color: rgba(0,220,230,0.25); color: #00e0e0; }
+  .reset-btn {
+    padding: 10px 16px; background: none;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+    color: #667788; font-size: 12px; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  /* Footer */
+  .footer { text-align: center; padding: 20px 0 8px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .footer-text { font-size: 12px; color: #00b0b0; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+  .footer-sub { font-size: 10px; color: #556677; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ========== 問題データ ==========
+const QUESTIONS = [
+  {
+    id: 1, exam: "第38回（令和7年度）", category: "医学概論",
+    question: "乳幼児期の発達に関する次の組み合わせのうち、最も適切なものを1つ選びなさい。",
+    choices: [
+      "定頸 － 生後1か月", "座位 － 生後3か月", "つかまり立ち － 生後10か月",
+      "一人で階段の上り下りをする － 1歳", "三輪車をこぐ － 2歳"
+    ],
+    answer: 2,
+    explanation: {
+      summary: "乳幼児の粗大運動発達の目安として、つかまり立ちは生後9〜10か月頃に可能になるのが一般的です。",
+      details: [
+        "定頸（首がすわる）：生後3〜4か月頃。",
+        "座位（お座り）：生後7〜8か月頃。",
+        "一人で階段の上り下り：2歳頃。1歳頃は「伝い歩き」や「独歩（一人歩き）」の時期です。",
+        "三輪車をこぐ：3歳頃。2歳頃は「走る」「両足跳び」などができるようになります。"
+      ]
+    }
+  },
+  {
+    id: 2, exam: "第38回（令和7年度）", category: "社会理論と社会システム",
+    question: "デュルケムの社会学的概念に関する次の記述のうち、最も適切なものを1つ選びなさい。",
+    choices: [
+      "アノミーとは、社会規範が弱体化し、個人の行動を規制する力が失われた状態をいう。",
+      "機械的連帯とは、分業が進んだ社会における相互依存に基づく連帯をいう。",
+      "有機的連帯とは、同質的な社会における集合意識に基づく連帯をいう。",
+      "社会的事実とは、個人の心理的な動機や意図のことをいう。",
+      "自殺論において、利己的自殺は社会的統合が強すぎる場合に生じるとした。"
+    ],
+    answer: 0,
+    explanation: {
+      summary: "デュルケムは、社会規範の崩壊・弱体化によって個人が規制されなくなった状態を「アノミー」と定義しました。",
+      details: [
+        "機械的連帯：同質的な社会における集合意識に基づく連帯（選択肢2は有機的連帯の説明）。",
+        "有機的連帯：分業が進んだ社会における相互依存に基づく連帯（選択肢3は機械的連帯の説明）。",
+        "社会的事実：個人の外にあって個人を拘束する行動・思考・感覚の様式のこと。",
+        "利己的自殺：社会的統合が弱い場合に生じる（強すぎる場合は集団本位的自殺）。"
+      ]
+    }
+  },
+  {
+    id: 3, exam: "第38回（令和7年度）", category: "現代社会と福祉",
+    question: "日本の社会保障制度に関する次の記述のうち、正しいものを1つ選びなさい。",
+    choices: [
+      "国民皆保険制度は1945年に実現した。",
+      "介護保険制度は2000年に施行された。",
+      "生活保護法は日本国憲法第13条を根拠としている。",
+      "国民年金法の制定により、1959年に国民皆年金が実現した。",
+      "後期高齢者医療制度の対象は65歳以上である。"
+    ],
+    answer: 1,
+    explanation: {
+      summary: "介護保険制度は、1997年に介護保険法が成立し、2000年4月から施行されました。",
+      details: [
+        "国民皆保険：1961年に実現（国民健康保険法の全面改正による）。",
+        "生活保護法：日本国憲法第25条（生存権）を根拠としている。",
+        "国民皆年金：1961年に国民年金の拠出制が開始され実現。法制定は1959年だが皆年金実現は1961年。",
+        "後期高齢者医療制度：対象は原則75歳以上（一定の障害がある場合は65歳以上）。"
+      ]
+    }
+  },
+  {
+    id: 4, exam: "第38回（令和7年度）", category: "地域福祉の理論と方法",
+    question: "コミュニティソーシャルワークに関する次の記述のうち、最も適切なものを1つ選びなさい。",
+    choices: [
+      "個別支援と地域支援を統合的に展開する実践である。",
+      "地域住民の参加を必要としない専門職のみの活動である。",
+      "制度内のサービス提供のみを行う実践である。",
+      "個人の問題を地域の課題として捉えることは含まれない。",
+      "行政機関のみが実施主体となる。"
+    ],
+    answer: 0,
+    explanation: {
+      summary: "コミュニティソーシャルワークは、個別支援と地域支援を一体的・統合的に展開する実践方法です。",
+      details: [
+        "地域住民の参加と協働が重要な要素であり、専門職のみの活動ではない。",
+        "制度の狭間にある課題やインフォーマルな支援も含めた包括的な実践。",
+        "個人の問題を地域の課題として捉え直し、地域全体の福祉力向上を目指す。",
+        "社会福祉協議会やNPO等、多様な主体が実施できる。"
+      ]
+    }
+  },
+  {
+    id: 5, exam: "第38回（令和7年度）", category: "福祉行財政と福祉計画",
+    question: "社会福祉法に規定する地域福祉計画に関する次の記述のうち、正しいものを1つ選びなさい。",
+    choices: [
+      "市町村地域福祉計画の策定は義務である。",
+      "都道府県地域福祉支援計画には、市町村の地域福祉の推進を支援するための基本方針を定める。",
+      "地域福祉計画は5年ごとに策定しなければならない。",
+      "地域福祉計画の策定には住民参加は不要である。",
+      "地域福祉計画は介護保険事業計画と一体的に策定しなければならない。"
+    ],
+    answer: 1,
+    explanation: {
+      summary: "都道府県地域福祉支援計画は、市町村の地域福祉の推進を支援するための基本方針を定めるものです。",
+      details: [
+        "市町村地域福祉計画の策定は努力義務（2018年改正で努力義務化）。",
+        "計画期間は法定されておらず、自治体の判断に委ねられている。",
+        "住民参加は地域福祉計画策定の重要な原則として位置づけられている。",
+        "地域福祉計画と介護保険事業計画は別個の計画であり、一体的策定の義務はない（上位計画としての整合性は必要）。"
+      ]
+    }
+  }
+];
+
+// ========== アプリ本体（Vanilla JS） ==========
+const TOTAL = QUESTIONS.length;
+let currentIndex = 0;
+let selectedChoice = null;
+let showAnswer = false;
+let showExplanation = false;
+let score = { correct: 0, answered: 0 };
+let answeredQuestions = new Set();
+
+function render() {
+  const q = QUESTIONS[currentIndex];
+  const root = document.getElementById('root');
+
+  let scoreHtml = '';
+  if (score.answered > 0) {
+    const rate = Math.round((score.correct / score.answered) * 100);
+    scoreHtml = `正答率 ${rate}%（${score.correct}/${score.answered}）`;
+  }
+
+  let choicesHtml = q.choices.map((c, i) => {
+    let cls = 'choice';
+    let markHtml = '';
+    if (showAnswer) {
+      cls += ' disabled';
+      if (i === q.answer) { cls += ' correct'; markHtml = '<span class="mark mark-correct">✓</span>'; }
+      else if (i === selectedChoice && i !== q.answer) { cls += ' wrong'; markHtml = '<span class="mark mark-wrong">✗</span>'; }
+    } else if (i === selectedChoice) {
+      cls += ' selected';
+    }
+    return `<button class="${cls}" onclick="selectChoice(${i})">
+      <span class="choice-num">${i + 1}</span>
+      <span class="choice-text">${c}</span>
+      ${markHtml}
+    </button>`;
+  }).join('');
+
+  let actionHtml = '';
+  if (!showAnswer) {
+    actionHtml = `<button class="submit-btn" ${selectedChoice === null ? 'disabled' : ''} onclick="submitAnswer()">解答する</button>`;
+  } else {
+    const isCorrect = selectedChoice === q.answer;
+    actionHtml = `<div class="result-banner ${isCorrect ? 'correct-bg' : 'wrong-bg'}">
+      <span class="result-icon">${isCorrect ? '⭕' : '❌'}</span>
+      <div>
+        <div class="result-title">${isCorrect ? '正解！' : '不正解'}</div>
+        <div class="result-answer">【正解】 ${q.answer + 1}</div>
+      </div>
+    </div>`;
+  }
+
+  let explanationHtml = '';
+  if (showAnswer) {
+    let bodyHtml = '';
+    if (showExplanation) {
+      const detailsHtml = q.explanation.details.map(d =>
+        `<div class="detail-item"><span class="detail-bullet">●</span><span>${d}</span></div>`
+      ).join('');
+      bodyHtml = `<div class="explanation-body">
+        <div class="dashed-line"></div>
+        <p class="explanation-summary">${q.explanation.summary}</p>
+        <div>${detailsHtml}</div>
+      </div>`;
+    }
+    explanationHtml = `<div class="card">
+      <button class="explanation-toggle" onclick="toggleExplanation()">
+        <span class="explanation-title">【解説・ポイント】</span>
+        <span class="toggle-arrow">${showExplanation ? '▲' : '▼'}</span>
+      </button>
+      ${bodyHtml}
+    </div>`;
+  }
+
+  root.innerHTML = `
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <span class="badge">社会福祉士</span>
+        <span class="header-title">過去問 演習</span>
+      </div>
+      <span class="score-text">${scoreHtml}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${((currentIndex + 1) / TOTAL) * 100}%"></div></div>
+      <div class="progress-label">${currentIndex + 1} / ${TOTAL} 問</div>
+    </div>
+
+    <!-- Question Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="exam-label">${q.exam}</span>
+        <span class="category-label">${q.category}</span>
+      </div>
+      <div class="dashed-line"></div>
+      <h2 class="question-number">問題${q.id}</h2>
+      <p class="question-text">${q.question}</p>
+      <div class="choices">${choicesHtml}</div>
+      ${actionHtml}
+    </div>
+
+    ${explanationHtml}
+
+    <!-- Navigation -->
+    <div class="nav-area">
+      <button class="nav-btn" ${currentIndex === 0 ? 'disabled' : ''} onclick="goPrev()">◀ 前の問題</button>
+      <button class="reset-btn" onclick="resetAll()">最初から</button>
+      <button class="nav-btn next" ${currentIndex === TOTAL - 1 ? 'disabled' : ''} onclick="goNext()">次の問題 ▶</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-text">kenjispark AI士業ラボ ／ セミナー教材用</div>
+      <div class="footer-sub">※ サンプル問題です。実際の試験問題とは異なる場合があります。</div>
+    </div>
+  `;
+}
+
+function selectChoice(i) {
+  if (showAnswer) return;
+  selectedChoice = i;
+  render();
+}
+
+function submitAnswer() {
+  if (selectedChoice === null) return;
+  showAnswer = true;
+  if (!answeredQuestions.has(currentIndex)) {
+    score.answered++;
+    if (selectedChoice === QUESTIONS[currentIndex].answer) score.correct++;
+    answeredQuestions.add(currentIndex);
+  }
+  render();
+}
+
+function toggleExplanation() {
+  showExplanation = !showExplanation;
+  render();
+}
+
+function goNext() {
+  if (currentIndex < TOTAL - 1) {
+    currentIndex++;
+    selectedChoice = null;
+    showAnswer = false;
+    showExplanation = false;
+    render();
+    window.scrollTo(0, 0);
+  }
+}
+
+function goPrev() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    selectedChoice = null;
+    showAnswer = false;
+    showExplanation = false;
+    render();
+    window.scrollTo(0, 0);
+  }
+}
+
+function resetAll() {
+  currentIndex = 0;
+  selectedChoice = null;
+  showAnswer = false;
+  showExplanation = false;
+  score = { correct: 0, answered: 0 };
+  answeredQuestions = new Set();
+  render();
+  window.scrollTo(0, 0);
+}
+
+// 初期描画
+render();
+</script>
+</body>
+</html>
